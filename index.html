@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cricket Scoreboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-image: linear-gradient(to right, #e6ecf0, #ffffff);
+    }
+    .score-header {
+      background-color: #4caf50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 24px;
+    }
+    .score-panel {
+      max-width: 800px;
+      background: white;
+      margin: 30px auto;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .score-display {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .score-display h2 {
+      margin: 0;
+      font-size: 28px;
+      color: #2c3e50;
+    }
+    .score-display p {
+      font-size: 18px;
+      color: #555;
+    }
+    .info-boxes {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .info-box {
+      flex: 1 1 200px;
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      color: #333;
+    }
+    .button-grid, .extras-grid, .utility-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .score-btn {
+      padding: 1rem;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #3f51b5;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .score-btn:hover {
+      background-color: #303f9f;
+    }
+    .end-btn {
+      background-color: #f44336;
+    }
+    .end-btn:hover {
+      background-color: #d32f2f;
+    }
+    .input-box {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .input-box input {
+      padding: 5px;
+      width: 120px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .download-btn, .reset-btn, .graph-btn {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #009688;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .download-btn:hover, .reset-btn:hover, .graph-btn:hover {
+      background-color: #00796b;
+    }
+  </style>
+</head>
+<body>
+
+<div class="score-header">Live Cricket Scoreboard</div>
+
+<div class="score-panel" id="scorecard">
+  <div class="score-display">
+    <h2 id="score">Team A: 0 / 0</h2>
+    <p id="overs">Overs: 0.0</p>
+    <p id="targetText"></p>
+    <p id="resultText"></p>
+  </div>
+  <div class="info-boxes">
+    <div class="info-box" id="striker">Striker: -</div>
+    <div class="info-box" id="nonStriker">Non-Striker: -</div>
+    <div class="info-box" id="bowler">Bowler: -</div>
+  </div>
+  <div class="input-box">
+    <input type="text" id="inputStriker" placeholder="Striker">
+    <input type="text" id="inputNonStriker" placeholder="Non-Striker">
+    <input type="text" id="inputBowler" placeholder="Bowler">
+    <button onclick="updateNames()">Update</button>
+  </div>
+  <div class="button-grid">
+    <button class="score-btn" onclick="addRuns(0)">0</button>
+    <button class="score-btn" onclick="addRuns(1)">1</button>
+    <button class="score-btn" onclick="addRuns(2)">2</button>
+    <button class="score-btn" onclick="addRuns(3)">3</button>
+    <button class="score-btn" onclick="addRuns(4)">4</button>
+    <button class="score-btn" onclick="addRuns(6)">6</button>
+    <button class="score-btn" onclick="addWicket()">Wicket</button>
+    <button class="score-btn end-btn" onclick="endInnings()">End Innings</button>
+  </div>
+</div>
+
+<button class="download-btn" onclick="downloadScorecard()">Download Scorecard</button>
+<button class="reset-btn" onclick="resetMatch()">Reset Match</button>
+<button class="graph-btn" onclick="showGraph()">Show Graph</button>
+
+<script>
+let runs = 0, wickets = 0, balls = 0, target = 0, isSecondInnings = false;
+let runProgress = [];
+
+function updateDisplay() {
+  const overStr = `${Math.floor(balls / 6)}.${balls % 6}`;
+  document.getElementById("score").textContent = `${isSecondInnings ? "Team B" : "Team A"}: ${runs} / ${wickets}`;
+  document.getElementById("overs").textContent = `Overs: ${overStr}`;
+  if (isSecondInnings) document.getElementById("targetText").textContent = `Target: ${target}`;
+  if (isSecondInnings && (runs > target || wickets >= 10 || balls >= 120)) {
+    const result = runs > target ? "Team B wins!" : (runs === target ? "Match Tied!" : "Team A wins!");
+    document.getElementById("resultText").textContent = result;
+    alert(result);
+  }
+}
+
+function addRuns(r) {
+  runs += r;
+  balls++;
+  runProgress.push(r);
+  updateDisplay();
+}
+
+function addWicket() {
+  wickets++;
+  balls++;
+  runProgress.push("W");
+  updateDisplay();
+}
+
+function endInnings() {
+  if (!isSecondInnings) {
+    target = runs + 1;
+    runs = 0; wickets = 0; balls = 0; runProgress = [];
+    isSecondInnings = true;
+    alert("Innings over. Target: " + target);
+  } else {
+    alert("Match Over");
+  }
+  updateDisplay();
+}
+
+function updateNames() {
+  document.getElementById("striker").textContent = "Striker: " + document.getElementById("inputStriker").value;
+  document.getElementById("nonStriker").textContent = "Non-Striker: " + document.getElementById("inputNonStriker").value;
+  document.getElementById("bowler").textContent = "Bowler: " + document.getElementById("inputBowler").value;
+}
+
+function downloadScorecard() {
+  const scoreText = document.getElementById("scorecard").innerText;
+  const blob = new Blob([scoreText], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'scorecard.txt';
+  link.click();
+}
+
+function resetMatch() {
+  runs = 0;
+  wickets = 0;
+  balls = 0;
+  target = 0;
+  isSecondInnings = false;
+  runProgress = [];
+  document.getElementById("targetText").textContent = "";
+  document.getElementById("resultText").textContent = "";
+  updateDisplay();
+}
+
+function showGraph() {
+  alert("Graph display coming soon. Use Chart.js or D3.js for actual graph rendering.");
+}
+</script>
+
+</body>
+</html>
